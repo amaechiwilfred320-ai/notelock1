@@ -1,0 +1,50 @@
+
+name: Build NoteLock APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential git zip unzip \
+            python3-pip python3-venv \
+            autoconf automake libtool \
+            pkg-config zlib1g-dev \
+            libffi-dev libssl-dev cmake
+
+      - name: Install Buildozer
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip setuptools wheel
+          pip install buildozer cython
+
+      - name: Build APK
+        run: |
+          source .venv/bin/activate
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NoteLock-APK
+          path: bin/*.apk
